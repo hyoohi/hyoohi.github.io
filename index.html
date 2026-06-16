@@ -1,120 +1,572 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Stack the Burger</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
-        }
-        body {
-            margin: 0;
-            padding: 0;
-            background: #1a2639;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        #game-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            height: 100%;
-            background: linear-gradient(to bottom, #2b5876 0%, #4e4376 100%);
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            overflow: hidden;
-        }
-        #score-board {
-            position: absolute;
-            top: calc(20px + env(safe-area-inset-top));
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 22px;
-            font-weight: 900;
-            color: #ffffff;
-            z-index: 10;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
-        }
-        #hud-level {
-            color: #ffd54f;
-        }
-        #recipe-area {
-            position: absolute;
-            top: calc(70px + env(safe-area-inset-top));
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(25, 18, 46, 0.6);
-            border: 2px solid #ffd54f;
-            border-radius: 15px;
-            padding: 8px 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 10;
-            min-width: 200px;
-        }
-        #recipe-title {
-            font-size: 11px;
-            color: #ffd54f;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-        #recipe-preview {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            height: 35px;
-        }
-        .recipe-icon {
-            width: 30px;
-            height: 30px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        #conveyor-belt {
-            position: absolute;
-            top: 140px;
-            left: 0;
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 5;
-        }
-        .falling-ingredient {
-            position: absolute;
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            background-position: center;
-            z-index: 4;
-            transform-origin: center center;
-        }
-        #plate {
-            position: absolute;
-            bottom: 12%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-            height: 20px;
-            background: #ffffff;
-            border-radius: 50% / 100% 100% 40% 40%;
-            border-bottom: 5px solid #cbd5e1;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            z-index: 6;
-            transition: left 0.05s ease-out;
-        }
-        #plate::before {
-            content: '';
-            position
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직장인 사회생활 능력 테스트</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+    background: #F4F1EA;
+    color: #2C2A28;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+  .app {
+    width: 100%;
+    max-width: 480px;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ===== 시작 화면 ===== */
+  .start-card {
+    background: #FFFFFF;
+    border-radius: 24px;
+    padding: 40px 28px 32px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  }
+  .badge {
+    display: inline-block;
+    background: #FCEEDD;
+    color: #8A5A1E;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+    letter-spacing: 0.3px;
+  }
+  .emoji-stack { font-size: 56px; line-height: 1; margin-bottom: 14px; }
+  h1 {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.35;
+    margin-bottom: 10px;
+    color: #1F1C1A;
+  }
+  .subtitle {
+    font-size: 14.5px;
+    color: #6B6660;
+    line-height: 1.6;
+    margin-bottom: 26px;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 28px;
+    font-size: 13px;
+    color: #8A847C;
+  }
+  .meta-row span { display: flex; align-items: center; gap: 5px; }
+  .start-btn {
+    width: 100%;
+    background: #D85A30;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    padding: 17px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.15s;
+  }
+  .start-btn:active { transform: scale(0.97); background: #BC4A24; }
+
+  /* ===== 질문 화면 ===== */
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 7px;
+    background: #E5E0D5;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #D85A30;
+    border-radius: 999px;
+    transition: width 0.35s ease;
+    width: 0%;
+  }
+  .progress-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #8A5A1E;
+    white-space: nowrap;
+  }
+  .q-card {
+    background: #FFFFFF;
+    border-radius: 22px;
+    padding: 30px 24px 24px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  }
+  .q-number {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #D85A30;
+    margin-bottom: 8px;
+    letter-spacing: 0.4px;
+  }
+  .q-text {
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1.45;
+    margin-bottom: 22px;
+    color: #1F1C1A;
+  }
+  .option-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #FAF8F3;
+    border: 1.5px solid #ECE7DB;
+    border-radius: 14px;
+    padding: 15px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #393530;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  }
+  .option-btn:last-child { margin-bottom: 0; }
+  .option-btn:hover { border-color: #D85A30; background: #FFF6F1; }
+  .option-btn:active { transform: scale(0.985); }
+
+  /* ===== 결과 화면 ===== */
+  .result-card {
+    background: #FFFFFF;
+    border-radius: 24px;
+    padding: 36px 26px 30px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  }
+  .result-eyebrow {
+    font-size: 13px;
+    font-weight: 700;
+    color: #8A847C;
+    margin-bottom: 14px;
+  }
+  .result-emoji { font-size: 64px; margin-bottom: 14px; }
+  .result-title {
+    font-size: 23px;
+    font-weight: 800;
+    color: #D85A30;
+    margin-bottom: 16px;
+    line-height: 1.4;
+  }
+  .result-desc {
+    font-size: 15px;
+    color: #4A4642;
+    line-height: 1.75;
+    text-align: left;
+    background: #FAF8F3;
+    border-radius: 16px;
+    padding: 18px 18px;
+    margin-bottom: 18px;
+  }
+  .result-section-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #8A5A1E;
+    margin-bottom: 8px;
+    text-align: left;
+  }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 22px; }
+  .tag {
+    background: #FCEEDD;
+    color: #8A5A1E;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  .compat-box {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .compat-item {
+    flex: 1;
+    background: #F1F6EE;
+    border-radius: 14px;
+    padding: 12px 8px;
+  }
+  .compat-item.bad { background: #FBEAEA; }
+  .compat-label { font-size: 11px; color: #8A847C; font-weight: 700; margin-bottom: 4px; }
+  .compat-name { font-size: 13.5px; font-weight: 800; color: #2C2A28; }
+  .btn-row { display: flex; gap: 10px; }
+  .retry-btn, .share-btn {
+    flex: 1;
+    border-radius: 14px;
+    padding: 15px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s;
+  }
+  .retry-btn { background: #F1EEE6; color: #57524B; }
+  .share-btn { background: #D85A30; color: #fff; }
+  .retry-btn:active, .share-btn:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 시작 화면 -->
+  <div class="screen active" id="screen-start">
+    <div class="start-card">
+      <div class="badge">직장인 자가진단</div>
+      <div class="emoji-stack">🧑‍💼💼</div>
+      <h1>나의 직장인<br>사회생활 능력 테스트</h1>
+      <p class="subtitle">단톡방 침묵, 점심 메뉴 정치, 칼퇴 사수까지.<br>당신의 사회생활 본능은 8가지 중 무엇일까요?</p>
+      <div class="meta-row">
+        <span>⏱ 약 2분</span>
+        <span>📝 총 12문항</span>
+        <span>🎯 결과 8유형</span>
+      </div>
+      <button class="start-btn" id="btn-start">테스트 시작하기</button>
+    </div>
+  </div>
+
+  <!-- 질문 화면 -->
+  <div class="screen" id="screen-quiz">
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">1 / 12</div>
+    </div>
+    <div class="q-card">
+      <div class="q-number" id="q-number">Q1</div>
+      <div class="q-text" id="q-text"></div>
+      <div id="q-options"></div>
+    </div>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div class="screen" id="screen-result">
+    <div class="result-card">
+      <div class="result-eyebrow">당신의 사회생활 유형은</div>
+      <div class="result-emoji" id="r-emoji"></div>
+      <div class="result-title" id="r-title"></div>
+      <div class="result-desc" id="r-desc"></div>
+      <div class="result-section-label">이런 키워드와 잘 어울려요</div>
+      <div class="tag-list" id="r-tags"></div>
+      <div class="compat-box">
+        <div class="compat-item">
+          <div class="compat-label">찰떡 케미</div>
+          <div class="compat-name" id="r-good"></div>
+        </div>
+        <div class="compat-item bad">
+          <div class="compat-label">살짝 빠그덕</div>
+          <div class="compat-name" id="r-bad"></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="retry-btn" id="btn-retry">다시 하기</button>
+        <button class="share-btn" id="btn-share">결과 공유하기</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== 데이터 =====
+// 8유형: A 눈치빠른 회의 스나이퍼 / B 단톡방 침묵의 현자 / C 사내정치 무관심파
+// D 점심메뉴 캐스팅보트 / E 영혼까지 갈아넣는 J형 / F 칼퇴 수호자
+// G 분위기 메이커 / H 막내의 탈을 쓴 베테랑
+
+const TYPES = {
+  A: {
+    emoji: "🎯",
+    title: "눈치 빠른 회의 스나이퍼",
+    desc: "회의실에 들어서는 순간 분위기를 스캔합니다. 누가 화났는지, 누구 말에 힘을 실어줘야 하는지, 지금 의견을 내야 할 타이밍인지 1초 만에 판단하는 타입. 정작 본인 의견보다 ‘분위기 읽기’에 에너지를 더 쓰는 게 단점이지만, 덕분에 회의실에서 사고는 거의 안 칩니다.",
+    tags: ["#센스만점", "#TPO장인", "#회의실레이더"],
+    good: "분위기 메이커",
+    bad: "사내정치 무관심파"
+  },
+  B: {
+    emoji: "🤫",
+    title: "단톡방 침묵의 현자",
+    desc: "단톡방 알림은 늘 999+. 하지만 메시지는 보내지 않습니다. 읽씹은 아니고 ‘정독’입니다. 꼭 필요한 순간에만 한 줄로 핵심을 짚어주는 타입이라 정작 입을 열면 다들 집중합니다. 리액션 이모지 하나로 모든 감정을 표현하는 것도 특기.",
+    tags: ["#필요할때만등판", "#이모지장인", "#정보는다본다"],
+    good: "막내의 탈을 쓴 베테랑",
+    bad: "분위기 메이커"
+  },
+  C: {
+    emoji: "🪴",
+    title: "사내정치 무관심파",
+    desc: "누가 누구랑 친하고, 누가 어디로 줄을 섰는지는 알고 싶지도 않습니다. 그저 내 할 일을 묵묵히 하고 정시에 결과물을 내는 게 목표. 가끔 분위기를 못 읽어서 ‘저 사람 진짜 모르는 거야?’ 소리를 듣지만, 정작 본인은 그게 더 편합니다.",
+    tags: ["#마이웨이", "#일만하는사람", "#정치는Pass"],
+    good: "칼퇴 수호자",
+    bad: "눈치 빠른 회의 스나이퍼"
+  },
+  D: {
+    emoji: "🍚",
+    title: "점심메뉴 캐스팅보트",
+    desc: "“아무거나요”라고 말하지만 사실 머릿속엔 이미 답이 있습니다. 모두의 취향을 종합해 최적의 메뉴를 도출하는 숨은 협상가. 회사 생존력의 8할은 점심 메뉴 합의 능력이라는 걸 아는 사람.",
+    tags: ["#아무거나의고수", "#메뉴협상가", "#모두의평화"],
+    good: "분위기 메이커",
+    bad: "영혼까지 갈아넣는 J형"
+  },
+  E: {
+    emoji: "📋",
+    title: "영혼까지 갈아넣는 J형",
+    desc: "할 일 목록 없이는 못 사는 타입. 회의록은 칼같이 정리되고, 마감일은 절대 어기지 않습니다. 완벽주의가 발동하면 야근으로 이어지는 게 흠이지만, 이 사람이 끼면 프로젝트는 일단 망하지 않습니다.",
+    tags: ["#완벽주의", "#투두리스트장인", "#든든한실무러"],
+    good: "단톡방 침묵의 현자",
+    bad: "칼퇴 수호자"
+  },
+  F: {
+    emoji: "🏃",
+    title: "칼퇴 수호자",
+    desc: "6시 정각, 자리에서 가장 먼저 사라지는 사람. 업무 시간엔 누구보다 집중력이 폭발하지만 퇴근 시간이 다가오면 본능적으로 짐을 챙깁니다. ‘저녁이 있는 삶’의 산증인이자, 워라밸 전도사.",
+    tags: ["#정시퇴근사수", "#워라밸전도사", "#효율덕후"],
+    good: "사내정치 무관심파",
+    bad: "영혼까지 갈아넣는 J형"
+  },
+  G: {
+    emoji: "🎉",
+    title: "분위기 메이커",
+    desc: "팀 분위기가 가라앉으면 자동으로 등판하는 사람. 농담 한마디로 싸한 회의실을 녹이고, 신입의 어색함도 단숨에 풀어줍니다. 가끔 텐션이 과해 ‘오늘 일은 언제 하냐’는 핀잔을 듣지만, 이 사람 없으면 팀 사기가 휑해집니다.",
+    tags: ["#텐션담당", "#인간비타민", "#팀사기충전기"],
+    good: "눈치 빠른 회의 스나이퍼",
+    bad: "단톡방 침묵의 현자"
+  },
+  H: {
+    emoji: "🧓",
+    title: "막내의 탈을 쓴 베테랑",
+    desc: "직급은 막내, 짬바는 부장급. 신입처럼 보이지만 사실 회사 내 모든 인간관계와 업무 흐름을 꿰고 있습니다. “저 잘 몰라요”라고 말하면서 답을 다 알고 있는 타입. 진짜 고인물은 조용히 묻어갑니다.",
+    tags: ["#숨은고인물", "#짬바는못속여", "#조용한실세"],
+    good: "영혼까지 갈아넣는 J형",
+    bad: "사내정치 무관심파"
+  }
+};
+
+const QUESTIONS = [
+  {
+    q: "월요일 아침 9시, 팀장님이 갑자기 전체 회의를 소집했다. 당신의 첫 반응은?",
+    options: [
+      { t: "회의실 분위기와 팀장님 표정부터 빠르게 스캔한다", type: "A" },
+      { t: "단톡방에 공지가 올라와도 일단 조용히 읽기만 한다", type: "B" },
+      { t: "무슨 회의든 일단 내 할 일부터 정리하고 들어간다", type: "C" },
+      { t: "회의보다 회의 후 점심 메뉴가 더 걱정된다", type: "D" }
+    ]
+  },
+  {
+    q: "갑자기 업무가 두 배로 늘었다. 당신의 선택은?",
+    options: [
+      { t: "투두리스트를 새로 짜고 우선순위부터 정리한다", type: "E" },
+      { t: "오늘 할 일만 끝내고 칼같이 퇴근, 나머지는 내일", type: "F" },
+      { t: "팀 분위기가 무거워지지 않게 농담부터 던진다", type: "G" },
+      { t: "이미 비슷한 상황을 겪어봐서 동요하지 않는다", type: "H" }
+    ]
+  },
+  {
+    q: "단체 카톡방에 팀장님이 의견을 물었다. 당신은?",
+    options: [
+      { t: "분위기를 보고 적절한 타이밍에 한마디 보탠다", type: "A" },
+      { t: "일단 읽고 다른 사람 답 먼저 기다린다", type: "B" },
+      { t: "딱히 신경 안 쓰고 알림도 잘 안 본다", type: "C" },
+      { t: "이모지나 짧은 호응으로 가볍게 답한다", type: "G" }
+    ]
+  },
+  {
+    q: "점심시간, 팀원들이 메뉴를 못 정하고 있다. 당신의 역할은?",
+    options: [
+      { t: "다들 취향을 슬쩍 물어보고 최적의 메뉴를 제안한다", type: "D" },
+      { t: "회의실 분위기 보듯 다수 의견을 빠르게 캐치한다", type: "A" },
+      { t: "그냥 가까운 식당으로 정시에 빠르게 다녀온다", type: "F" },
+      { t: "아무 데나 좋다며 다른 사람한테 맡긴다", type: "B" }
+    ]
+  },
+  {
+    q: "회식 자리에서 당신의 포지션은?",
+    options: [
+      { t: "분위기가 가라앉으면 먼저 농담을 던진다", type: "G" },
+      { t: "조용히 자리를 지키며 필요한 말만 한다", type: "B" },
+      { t: "사람들 관계도를 자연스럽게 파악하고 있다", type: "H" },
+      { t: "맛있는 거 먹고 일찍 집에 가고 싶다", type: "F" }
+    ]
+  },
+  {
+    q: "신입이 들어왔다. 당신의 대응은?",
+    options: [
+      { t: "텐션을 살짝 올려서 어색함을 풀어준다", type: "G" },
+      { t: "업무 매뉴얼과 일정부터 꼼꼼히 챙겨준다", type: "E" },
+      { t: "필요한 것만 짧게 알려주고 알아서 하게 둔다", type: "C" },
+      { t: "조용히 지켜보다가 진짜 필요할 때 도와준다", type: "H" }
+    ]
+  },
+  {
+    q: "마감이 임박했는데 동료가 도움을 요청했다. 당신은?",
+    options: [
+      { t: "내 할 일이 먼저라 잠깐 시간 날 때 도와준다", type: "C" },
+      { t: "일정 다시 짜서 같이 끝낼 방법부터 찾는다", type: "E" },
+      { t: "분위기 보고 다른 사람도 같이 끼게 유도한다", type: "A" },
+      { t: "퇴근 전까지만 도와주고 시간 되면 칼퇴한다", type: "F" }
+    ]
+  },
+  {
+    q: "팀장님이 갑자기 칭찬을 했다. 당신의 속마음은?",
+    options: [
+      { t: "왜 칭찬했는지부터 빠르게 분석한다", type: "A" },
+      { t: "민망해서 그냥 조용히 웃고 넘긴다", type: "B" },
+      { t: "원래 잘하는 거 알아줘서 다행이라 생각한다", type: "H" },
+      { t: "분위기 좋을 때 같이 한마디 더 던진다", type: "G" }
+    ]
+  },
+  {
+    q: "퇴근 시간 5분 전, 갑자기 급한 요청이 들어왔다. 당신은?",
+    options: [
+      { t: "내일 해도 되는지부터 확인하고 정시 퇴근을 노린다", type: "F" },
+      { t: "일단 자료부터 깔끔하게 정리해두고 처리한다", type: "E" },
+      { t: "큰 동요 없이 늘 있던 일처럼 대응한다", type: "H" },
+      { t: "그냥 묵묵히 처리하고 빨리 끝낸다", type: "C" }
+    ]
+  },
+  {
+    q: "동료들이 사내 소문 얘기를 시작했다. 당신은?",
+    options: [
+      { t: "이미 대충 다 알고 있지만 모르는 척한다", type: "H" },
+      { t: "관심 없어서 슬쩍 자리를 피한다", type: "C" },
+      { t: "조용히 듣기만 하고 의견은 잘 안 낸다", type: "B" },
+      { t: "분위기 띄우려고 재밌는 리액션을 한다", type: "G" }
+    ]
+  },
+  {
+    q: "프로젝트 진행 중 의견 충돌이 생겼다. 당신의 역할은?",
+    options: [
+      { t: "양쪽 분위기 다 살펴보고 중재할 타이밍을 잡는다", type: "A" },
+      { t: "데이터와 일정으로 누가 맞는지 정리해서 보여준다", type: "E" },
+      { t: "분위기 무거워지지 않게 가볍게 환기시킨다", type: "G" },
+      { t: "다수가 원하는 방향으로 자연스럽게 맞춰준다", type: "D" }
+    ]
+  },
+  {
+    q: "한 주를 마무리하며 가장 만족스러운 순간은?",
+    options: [
+      { t: "정시에 깔끔하게 퇴근하는 금요일 6시", type: "F" },
+      { t: "투두리스트를 전부 체크하고 닫은 순간", type: "E" },
+      { t: "팀 분위기를 한층 끌어올렸다고 느낄 때", type: "G" },
+      { t: "아무 잡음 없이 조용히 한 주가 지나갔을 때", type: "C" }
+    ]
+  }
+];
+
+let current = 0;
+const scores = { A:0, B:0, C:0, D:0, E:0, F:0, G:0, H:0 };
+
+const screenStart = document.getElementById('screen-start');
+const screenQuiz = document.getElementById('screen-quiz');
+const screenResult = document.getElementById('screen-result');
+
+document.getElementById('btn-start').addEventListener('click', startQuiz);
+document.getElementById('btn-retry').addEventListener('click', resetQuiz);
+document.getElementById('btn-share').addEventListener('click', shareResult);
+
+function startQuiz() {
+  current = 0;
+  for (const k in scores) scores[k] = 0;
+  screenStart.classList.remove('active');
+  screenResult.classList.remove('active');
+  screenQuiz.classList.add('active');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const total = QUESTIONS.length;
+  const item = QUESTIONS[current];
+  document.getElementById('q-number').textContent = `Q${current + 1}`;
+  document.getElementById('q-text').textContent = item.q;
+  document.getElementById('progress-label').textContent = `${current + 1} / ${total}`;
+  document.getElementById('progress-fill').style.width = `${((current) / total) * 100}%`;
+
+  const optWrap = document.getElementById('q-options');
+  optWrap.innerHTML = '';
+  item.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt.t;
+    btn.addEventListener('click', () => selectOption(opt.type));
+    optWrap.appendChild(btn);
+  });
+}
+
+function selectOption(type) {
+  scores[type] += 1;
+  current += 1;
+  if (current >= QUESTIONS.length) {
+    document.getElementById('progress-fill').style.width = '100%';
+    setTimeout(showResult, 200);
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  let bestType = 'A';
+  let bestScore = -1;
+  for (const k in scores) {
+    if (scores[k] > bestScore) {
+      bestScore = scores[k];
+      bestType = k;
+    }
+  }
+  const data = TYPES[bestType];
+
+  document.getElementById('r-emoji').textContent = data.emoji;
+  document.getElementById('r-title').textContent = data.title;
+  document.getElementById('r-desc').textContent = data.desc;
+
+  const tagWrap = document.getElementById('r-tags');
+  tagWrap.innerHTML = '';
+  data.tags.forEach(tag => {
+    const span = document.createElement('span');
+    span.className = 'tag';
+    span.textContent = tag;
+    tagWrap.appendChild(span);
+  });
+
+  document.getElementById('r-good').textContent = data.good;
+  document.getElementById('r-bad').textContent = data.bad;
+
+  screenQuiz.classList.remove('active');
+  screenResult.classList.add('active');
+}
+
+function resetQuiz() {
+  screenResult.classList.remove('active');
+  screenStart.classList.add('active');
+}
+
+function shareResult() {
+  const title = document.getElementById('r-title').textContent;
+  const text = `나의 직장인 사회생활 유형은 "${title}"! 너도 테스트 해봐.`;
+  if (navigator.share) {
+    navigator.share({ title: '직장인 사회생활 능력 테스트', text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('결과가 복사되었어요. 친구에게 공유해보세요!');
+    }).catch(() => {
+      alert(text);
+    });
+  }
+}
+</script>
+</body>
+</html>
