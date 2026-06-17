@@ -2,571 +2,730 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>직장인 사회생활 능력 테스트</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Water Slide Rush 💧</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
-    background: #F4F1EA;
-    color: #2C2A28;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    padding: 32px 16px;
-  }
-  .app {
-    width: 100%;
-    max-width: 480px;
-  }
-  .screen { display: none; }
-  .screen.active { display: block; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { overflow: hidden; background: #87CEEB; font-family: 'Arial', sans-serif; touch-action: none; }
+canvas { display: block; }
 
-  /* ===== 시작 화면 ===== */
-  .start-card {
-    background: #FFFFFF;
-    border-radius: 24px;
-    padding: 40px 28px 32px;
-    text-align: center;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
-  }
-  .badge {
-    display: inline-block;
-    background: #FCEEDD;
-    color: #8A5A1E;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 6px 14px;
-    border-radius: 999px;
-    margin-bottom: 18px;
-    letter-spacing: 0.3px;
-  }
-  .emoji-stack { font-size: 56px; line-height: 1; margin-bottom: 14px; }
-  h1 {
-    font-size: 24px;
-    font-weight: 800;
-    line-height: 1.35;
-    margin-bottom: 10px;
-    color: #1F1C1A;
-  }
-  .subtitle {
-    font-size: 14.5px;
-    color: #6B6660;
-    line-height: 1.6;
-    margin-bottom: 26px;
-  }
-  .meta-row {
-    display: flex;
-    justify-content: center;
-    gap: 18px;
-    margin-bottom: 28px;
-    font-size: 13px;
-    color: #8A847C;
-  }
-  .meta-row span { display: flex; align-items: center; gap: 5px; }
-  .start-btn {
-    width: 100%;
-    background: #D85A30;
-    color: #fff;
-    border: none;
-    border-radius: 16px;
-    padding: 17px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.15s, background 0.15s;
-  }
-  .start-btn:active { transform: scale(0.97); background: #BC4A24; }
+/* HUD */
+#hud {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  text-align: center; pointer-events: none; z-index: 10;
+}
+#round-display {
+  font-size: 22px; font-weight: bold; color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  background: rgba(0,80,180,0.45); padding: 6px 22px; border-radius: 20px;
+}
+#speed-bar-wrap {
+  margin-top: 6px; background: rgba(0,0,0,0.3); border-radius: 10px;
+  width: 180px; height: 10px; margin-left: auto; margin-right: auto;
+}
+#speed-bar { height: 100%; width: 0%; background: #00e5ff; border-radius: 10px; transition: width 0.1s; }
 
-  /* ===== 질문 화면 ===== */
-  .progress-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 22px;
-  }
-  .progress-bar {
-    flex: 1;
-    height: 7px;
-    background: #E5E0D5;
-    border-radius: 999px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    background: #D85A30;
-    border-radius: 999px;
-    transition: width 0.35s ease;
-    width: 0%;
-  }
-  .progress-label {
-    font-size: 12.5px;
-    font-weight: 700;
-    color: #8A5A1E;
-    white-space: nowrap;
-  }
-  .q-card {
-    background: #FFFFFF;
-    border-radius: 22px;
-    padding: 30px 24px 24px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
-  }
-  .q-number {
-    font-size: 12.5px;
-    font-weight: 700;
-    color: #D85A30;
-    margin-bottom: 8px;
-    letter-spacing: 0.4px;
-  }
-  .q-text {
-    font-size: 19px;
-    font-weight: 800;
-    line-height: 1.45;
-    margin-bottom: 22px;
-    color: #1F1C1A;
-  }
-  .option-btn {
-    display: block;
-    width: 100%;
-    text-align: left;
-    background: #FAF8F3;
-    border: 1.5px solid #ECE7DB;
-    border-radius: 14px;
-    padding: 15px 16px;
-    font-size: 15px;
-    font-weight: 600;
-    color: #393530;
-    line-height: 1.5;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s, transform 0.1s;
-  }
-  .option-btn:last-child { margin-bottom: 0; }
-  .option-btn:hover { border-color: #D85A30; background: #FFF6F1; }
-  .option-btn:active { transform: scale(0.985); }
+/* 메뉴 오버레이 */
+#overlay {
+  position: fixed; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 20;
+  background: linear-gradient(180deg, rgba(0,120,255,0.55) 0%, rgba(0,180,255,0.35) 100%);
+}
+#overlay h1 {
+  font-size: 52px; font-weight: 900; color: #fff;
+  text-shadow: 0 4px 16px rgba(0,0,100,0.5);
+  margin-bottom: 8px; letter-spacing: 2px;
+}
+#overlay p { font-size: 17px; color: #e0f4ff; margin-bottom: 28px; }
+#overlay.hidden { display: none; }
 
-  /* ===== 결과 화면 ===== */
-  .result-card {
-    background: #FFFFFF;
-    border-radius: 24px;
-    padding: 36px 26px 30px;
-    text-align: center;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
-  }
-  .result-eyebrow {
-    font-size: 13px;
-    font-weight: 700;
-    color: #8A847C;
-    margin-bottom: 14px;
-  }
-  .result-emoji { font-size: 64px; margin-bottom: 14px; }
-  .result-title {
-    font-size: 23px;
-    font-weight: 800;
-    color: #D85A30;
-    margin-bottom: 16px;
-    line-height: 1.4;
-  }
-  .result-desc {
-    font-size: 15px;
-    color: #4A4642;
-    line-height: 1.75;
-    text-align: left;
-    background: #FAF8F3;
-    border-radius: 16px;
-    padding: 18px 18px;
-    margin-bottom: 18px;
-  }
-  .result-section-label {
-    font-size: 12.5px;
-    font-weight: 700;
-    color: #8A5A1E;
-    margin-bottom: 8px;
-    text-align: left;
-  }
-  .tag-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 22px; }
-  .tag {
-    background: #FCEEDD;
-    color: #8A5A1E;
-    font-size: 12.5px;
-    font-weight: 700;
-    padding: 6px 12px;
-    border-radius: 999px;
-  }
-  .compat-box {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 24px;
-  }
-  .compat-item {
-    flex: 1;
-    background: #F1F6EE;
-    border-radius: 14px;
-    padding: 12px 8px;
-  }
-  .compat-item.bad { background: #FBEAEA; }
-  .compat-label { font-size: 11px; color: #8A847C; font-weight: 700; margin-bottom: 4px; }
-  .compat-name { font-size: 13.5px; font-weight: 800; color: #2C2A28; }
-  .btn-row { display: flex; gap: 10px; }
-  .retry-btn, .share-btn {
-    flex: 1;
-    border-radius: 14px;
-    padding: 15px;
-    font-size: 14.5px;
-    font-weight: 700;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.15s;
-  }
-  .retry-btn { background: #F1EEE6; color: #57524B; }
-  .share-btn { background: #D85A30; color: #fff; }
-  .retry-btn:active, .share-btn:active { transform: scale(0.97); }
+.btn-primary {
+  padding: 16px 48px; font-size: 22px; font-weight: bold; letter-spacing: 1px;
+  background: linear-gradient(135deg, #00c6fb, #005bea);
+  color: #fff; border: none; border-radius: 40px; cursor: pointer;
+  box-shadow: 0 6px 24px rgba(0,100,255,0.4);
+  transition: transform 0.1s;
+}
+.btn-primary:active { transform: scale(0.95); }
+
+/* JUMP 버튼 */
+#jump-btn {
+  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+  padding: 22px 70px; font-size: 26px; font-weight: 900; letter-spacing: 2px;
+  background: rgba(255, 140, 0, 0.88); color: #fff;
+  border: 3px solid rgba(255,200,0,0.8); border-radius: 50px; cursor: pointer;
+  box-shadow: 0 6px 30px rgba(255,100,0,0.5);
+  z-index: 30; display: none;
+  animation: jumpPulse 0.6s infinite alternate;
+}
+#jump-btn.visible { display: block; }
+@keyframes jumpPulse {
+  from { transform: translateX(-50%) scale(1); box-shadow: 0 6px 30px rgba(255,100,0,0.5); }
+  to   { transform: translateX(-50%) scale(1.07); box-shadow: 0 10px 40px rgba(255,160,0,0.8); }
+}
+
+/* 결과 패널 */
+#result-panel {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(0,20,60,0.85); border: 2px solid rgba(0,200,255,0.4);
+  border-radius: 24px; padding: 36px 52px; text-align: center;
+  color: #fff; z-index: 25; display: none; min-width: 280px;
+}
+#result-panel h2 { font-size: 44px; margin-bottom: 10px; }
+#result-panel p  { font-size: 20px; margin-bottom: 24px; color: #90e0ff; }
+.btn-row { display: flex; gap: 12px; justify-content: center; }
+.btn-sm {
+  padding: 11px 28px; font-size: 16px; font-weight: bold;
+  border: none; border-radius: 20px; cursor: pointer;
+  transition: transform 0.1s;
+}
+.btn-sm:active { transform: scale(0.95); }
+#retry-btn  { background: #ff6b6b; color: #fff; }
+#next-btn   { background: #00c6fb; color: #fff; }
+
+/* 이탈 경고 */
+#fall-warning {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 80px; z-index: 40; display: none; animation: fadeOut 1.2s forwards;
+}
+@keyframes fadeOut {
+  0% { opacity:1; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity:0; transform: translate(-50%,-70%) scale(1.5); }
+}
 </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- 시작 화면 -->
-  <div class="screen active" id="screen-start">
-    <div class="start-card">
-      <div class="badge">직장인 자가진단</div>
-      <div class="emoji-stack">🧑‍💼💼</div>
-      <h1>나의 직장인<br>사회생활 능력 테스트</h1>
-      <p class="subtitle">단톡방 침묵, 점심 메뉴 정치, 칼퇴 사수까지.<br>당신의 사회생활 본능은 8가지 중 무엇일까요?</p>
-      <div class="meta-row">
-        <span>⏱ 약 2분</span>
-        <span>📝 총 12문항</span>
-        <span>🎯 결과 8유형</span>
-      </div>
-      <button class="start-btn" id="btn-start">테스트 시작하기</button>
-    </div>
-  </div>
-
-  <!-- 질문 화면 -->
-  <div class="screen" id="screen-quiz">
-    <div class="progress-wrap">
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-      <div class="progress-label" id="progress-label">1 / 12</div>
-    </div>
-    <div class="q-card">
-      <div class="q-number" id="q-number">Q1</div>
-      <div class="q-text" id="q-text"></div>
-      <div id="q-options"></div>
-    </div>
-  </div>
-
-  <!-- 결과 화면 -->
-  <div class="screen" id="screen-result">
-    <div class="result-card">
-      <div class="result-eyebrow">당신의 사회생활 유형은</div>
-      <div class="result-emoji" id="r-emoji"></div>
-      <div class="result-title" id="r-title"></div>
-      <div class="result-desc" id="r-desc"></div>
-      <div class="result-section-label">이런 키워드와 잘 어울려요</div>
-      <div class="tag-list" id="r-tags"></div>
-      <div class="compat-box">
-        <div class="compat-item">
-          <div class="compat-label">찰떡 케미</div>
-          <div class="compat-name" id="r-good"></div>
-        </div>
-        <div class="compat-item bad">
-          <div class="compat-label">살짝 빠그덕</div>
-          <div class="compat-name" id="r-bad"></div>
-        </div>
-      </div>
-      <div class="btn-row">
-        <button class="retry-btn" id="btn-retry">다시 하기</button>
-        <button class="share-btn" id="btn-share">결과 공유하기</button>
-      </div>
-    </div>
-  </div>
-
+<!-- HUD -->
+<div id="hud">
+  <div id="round-display">ROUND 1</div>
+  <div id="speed-bar-wrap"><div id="speed-bar"></div></div>
 </div>
 
-<script>
-// ===== 데이터 =====
-// 8유형: A 눈치빠른 회의 스나이퍼 / B 단톡방 침묵의 현자 / C 사내정치 무관심파
-// D 점심메뉴 캐스팅보트 / E 영혼까지 갈아넣는 J형 / F 칼퇴 수호자
-// G 분위기 메이커 / H 막내의 탈을 쓴 베테랑
+<!-- 메인 메뉴 -->
+<div id="overlay">
+  <h1>💧 Water Slide</h1>
+  <p>좌우 드래그 / 방향키로 슬라이드를 조종하세요!</p>
+  <button class="btn-primary" id="start-btn">PLAY!</button>
+</div>
 
-const TYPES = {
-  A: {
-    emoji: "🎯",
-    title: "눈치 빠른 회의 스나이퍼",
-    desc: "회의실에 들어서는 순간 분위기를 스캔합니다. 누가 화났는지, 누구 말에 힘을 실어줘야 하는지, 지금 의견을 내야 할 타이밍인지 1초 만에 판단하는 타입. 정작 본인 의견보다 ‘분위기 읽기’에 에너지를 더 쓰는 게 단점이지만, 덕분에 회의실에서 사고는 거의 안 칩니다.",
-    tags: ["#센스만점", "#TPO장인", "#회의실레이더"],
-    good: "분위기 메이커",
-    bad: "사내정치 무관심파"
-  },
-  B: {
-    emoji: "🤫",
-    title: "단톡방 침묵의 현자",
-    desc: "단톡방 알림은 늘 999+. 하지만 메시지는 보내지 않습니다. 읽씹은 아니고 ‘정독’입니다. 꼭 필요한 순간에만 한 줄로 핵심을 짚어주는 타입이라 정작 입을 열면 다들 집중합니다. 리액션 이모지 하나로 모든 감정을 표현하는 것도 특기.",
-    tags: ["#필요할때만등판", "#이모지장인", "#정보는다본다"],
-    good: "막내의 탈을 쓴 베테랑",
-    bad: "분위기 메이커"
-  },
-  C: {
-    emoji: "🪴",
-    title: "사내정치 무관심파",
-    desc: "누가 누구랑 친하고, 누가 어디로 줄을 섰는지는 알고 싶지도 않습니다. 그저 내 할 일을 묵묵히 하고 정시에 결과물을 내는 게 목표. 가끔 분위기를 못 읽어서 ‘저 사람 진짜 모르는 거야?’ 소리를 듣지만, 정작 본인은 그게 더 편합니다.",
-    tags: ["#마이웨이", "#일만하는사람", "#정치는Pass"],
-    good: "칼퇴 수호자",
-    bad: "눈치 빠른 회의 스나이퍼"
-  },
-  D: {
-    emoji: "🍚",
-    title: "점심메뉴 캐스팅보트",
-    desc: "“아무거나요”라고 말하지만 사실 머릿속엔 이미 답이 있습니다. 모두의 취향을 종합해 최적의 메뉴를 도출하는 숨은 협상가. 회사 생존력의 8할은 점심 메뉴 합의 능력이라는 걸 아는 사람.",
-    tags: ["#아무거나의고수", "#메뉴협상가", "#모두의평화"],
-    good: "분위기 메이커",
-    bad: "영혼까지 갈아넣는 J형"
-  },
-  E: {
-    emoji: "📋",
-    title: "영혼까지 갈아넣는 J형",
-    desc: "할 일 목록 없이는 못 사는 타입. 회의록은 칼같이 정리되고, 마감일은 절대 어기지 않습니다. 완벽주의가 발동하면 야근으로 이어지는 게 흠이지만, 이 사람이 끼면 프로젝트는 일단 망하지 않습니다.",
-    tags: ["#완벽주의", "#투두리스트장인", "#든든한실무러"],
-    good: "단톡방 침묵의 현자",
-    bad: "칼퇴 수호자"
-  },
-  F: {
-    emoji: "🏃",
-    title: "칼퇴 수호자",
-    desc: "6시 정각, 자리에서 가장 먼저 사라지는 사람. 업무 시간엔 누구보다 집중력이 폭발하지만 퇴근 시간이 다가오면 본능적으로 짐을 챙깁니다. ‘저녁이 있는 삶’의 산증인이자, 워라밸 전도사.",
-    tags: ["#정시퇴근사수", "#워라밸전도사", "#효율덕후"],
-    good: "사내정치 무관심파",
-    bad: "영혼까지 갈아넣는 J형"
-  },
-  G: {
-    emoji: "🎉",
-    title: "분위기 메이커",
-    desc: "팀 분위기가 가라앉으면 자동으로 등판하는 사람. 농담 한마디로 싸한 회의실을 녹이고, 신입의 어색함도 단숨에 풀어줍니다. 가끔 텐션이 과해 ‘오늘 일은 언제 하냐’는 핀잔을 듣지만, 이 사람 없으면 팀 사기가 휑해집니다.",
-    tags: ["#텐션담당", "#인간비타민", "#팀사기충전기"],
-    good: "눈치 빠른 회의 스나이퍼",
-    bad: "단톡방 침묵의 현자"
-  },
-  H: {
-    emoji: "🧓",
-    title: "막내의 탈을 쓴 베테랑",
-    desc: "직급은 막내, 짬바는 부장급. 신입처럼 보이지만 사실 회사 내 모든 인간관계와 업무 흐름을 꿰고 있습니다. “저 잘 몰라요”라고 말하면서 답을 다 알고 있는 타입. 진짜 고인물은 조용히 묻어갑니다.",
-    tags: ["#숨은고인물", "#짬바는못속여", "#조용한실세"],
-    good: "영혼까지 갈아넣는 J형",
-    bad: "사내정치 무관심파"
-  }
+<!-- JUMP 버튼 (Round 3) -->
+<button id="jump-btn">🚀 JUMP!</button>
+
+<!-- 결과 패널 -->
+<div id="result-panel">
+  <h2 id="result-title">PERFECT!</h2>
+  <p id="result-msg">완벽한 착지!</p>
+  <div class="btn-row">
+    <button class="btn-sm" id="retry-btn">다시하기</button>
+    <button class="btn-sm" id="next-btn">다음 라운드 →</button>
+  </div>
+</div>
+
+<!-- 이탈 이모지 -->
+<div id="fall-warning">💦</div>
+
+<!-- Three.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ============================================================
+//  CONFIG
+// ============================================================
+const CFG = {
+  TRACK_R: 3.2,          // 슬라이드 내부 반경
+  PLAYER_R: 0.42,        // 플레이어 반경
+  CAM_DIST: 9,           // 카메라 후방 거리
+  CAM_H: 4.5,            // 카메라 높이
+  CAM_LERP: 0.1,         // 카메라 부드러움
+  LATERAL_ACCEL: 0.07,   // 좌우 가속
+  FRICTION: 0.84,        // 좌우 마찰
+  FALL_LIMIT: 1.05,      // 이탈 판정 (±1 = 슬라이드 끝)
+  MAX_SPEED_MULT: 2.2,   // 최대 속도 배율
 };
 
-const QUESTIONS = [
+// ============================================================
+//  ROUND DEFINITIONS
+// ============================================================
+//  각 라운드: 제어점(CatmullRomCurve3), 기본 속도, 원심력 계수, 점프 갭
+//  추후 제어점을 수정해 트랙 형태를 변경하세요.
+const ROUNDS = [
+  // ── Round 1: Beginner ── 완만한 S커브
   {
-    q: "월요일 아침 9시, 팀장님이 갑자기 전체 회의를 소집했다. 당신의 첫 반응은?",
-    options: [
-      { t: "회의실 분위기와 팀장님 표정부터 빠르게 스캔한다", type: "A" },
-      { t: "단톡방에 공지가 올라와도 일단 조용히 읽기만 한다", type: "B" },
-      { t: "무슨 회의든 일단 내 할 일부터 정리하고 들어간다", type: "C" },
-      { t: "회의보다 회의 후 점심 메뉴가 더 걱정된다", type: "D" }
-    ]
+    label: 'ROUND 1 · BEGINNER',
+    pts: [
+      [ 0,  0,   0],
+      [ 0, -1, -18],
+      [ 6, -5, -38],
+      [10, -9, -58],
+      [ 6,-13, -78],
+      [ 0,-17, -98],
+      [-6,-21,-118],
+      [-4,-26,-138],
+      [ 0,-31,-158],
+      [ 0,-36,-175],   // 수영장 진입
+    ],
+    speed: 0.0016,
+    centrifugal: 0.5,
+    hasJump: false,
+    jumpGapT: [0, 0],
+    poolAt: [ 0,-38,-182],
   },
+  // ── Round 2: Extreme ── 급격한 S자 + 고속
   {
-    q: "갑자기 업무가 두 배로 늘었다. 당신의 선택은?",
-    options: [
-      { t: "투두리스트를 새로 짜고 우선순위부터 정리한다", type: "E" },
-      { t: "오늘 할 일만 끝내고 칼같이 퇴근, 나머지는 내일", type: "F" },
-      { t: "팀 분위기가 무거워지지 않게 농담부터 던진다", type: "G" },
-      { t: "이미 비슷한 상황을 겪어봐서 동요하지 않는다", type: "H" }
-    ]
+    label: 'ROUND 2 · EXTREME',
+    pts: [
+      [ 0,  0,   0],
+      [ 0, -2, -14],
+      [14, -9, -30],
+      [16,-16, -47],
+      [ 8,-23, -63],
+      [ 0,-29, -78],
+      [-16,-36, -94],
+      [-16,-44,-110],
+      [ -8,-52,-126],
+      [  0,-59,-142],
+      [ 14,-66,-158],
+      [ 14,-74,-170],
+      [  0,-81,-182],   // 수영장 진입
+    ],
+    speed: 0.0022,
+    centrifugal: 1.3,
+    hasJump: false,
+    jumpGapT: [0, 0],
+    poolAt: [ 0,-84,-190],
   },
+  // ── Round 3: Jump & Fly ── 점프 갭 포함
   {
-    q: "단체 카톡방에 팀장님이 의견을 물었다. 당신은?",
-    options: [
-      { t: "분위기를 보고 적절한 타이밍에 한마디 보탠다", type: "A" },
-      { t: "일단 읽고 다른 사람 답 먼저 기다린다", type: "B" },
-      { t: "딱히 신경 안 쓰고 알림도 잘 안 본다", type: "C" },
-      { t: "이모지나 짧은 호응으로 가볍게 답한다", type: "G" }
-    ]
+    label: 'ROUND 3 · JUMP & FLY',
+    pts: [
+      [ 0,  0,   0],
+      [ 0, -3, -18],
+      [ 8,-10, -36],
+      [ 0,-18, -54],
+      [-8,-25, -72],
+      [ 0,-30, -90],   // t ≈ 0.50 → 갭 시작
+      // 갭 구간: t 0.52 ~ 0.65 → 트랙 없음
+      [ 0,-42,-115],   // t ≈ 0.65 → 갭 끝 (착지 지점)
+      [ 8,-50,-135],
+      [ 0,-58,-155],
+      [ 0,-63,-172],   // 수영장 진입
+    ],
+    speed: 0.0026,
+    centrifugal: 1.0,
+    hasJump: true,
+    jumpGapT: [0.50, 0.64],  // [갭 시작 t, 갭 끝 t]
+    poolAt: [ 0,-66,-180],
   },
-  {
-    q: "점심시간, 팀원들이 메뉴를 못 정하고 있다. 당신의 역할은?",
-    options: [
-      { t: "다들 취향을 슬쩍 물어보고 최적의 메뉴를 제안한다", type: "D" },
-      { t: "회의실 분위기 보듯 다수 의견을 빠르게 캐치한다", type: "A" },
-      { t: "그냥 가까운 식당으로 정시에 빠르게 다녀온다", type: "F" },
-      { t: "아무 데나 좋다며 다른 사람한테 맡긴다", type: "B" }
-    ]
-  },
-  {
-    q: "회식 자리에서 당신의 포지션은?",
-    options: [
-      { t: "분위기가 가라앉으면 먼저 농담을 던진다", type: "G" },
-      { t: "조용히 자리를 지키며 필요한 말만 한다", type: "B" },
-      { t: "사람들 관계도를 자연스럽게 파악하고 있다", type: "H" },
-      { t: "맛있는 거 먹고 일찍 집에 가고 싶다", type: "F" }
-    ]
-  },
-  {
-    q: "신입이 들어왔다. 당신의 대응은?",
-    options: [
-      { t: "텐션을 살짝 올려서 어색함을 풀어준다", type: "G" },
-      { t: "업무 매뉴얼과 일정부터 꼼꼼히 챙겨준다", type: "E" },
-      { t: "필요한 것만 짧게 알려주고 알아서 하게 둔다", type: "C" },
-      { t: "조용히 지켜보다가 진짜 필요할 때 도와준다", type: "H" }
-    ]
-  },
-  {
-    q: "마감이 임박했는데 동료가 도움을 요청했다. 당신은?",
-    options: [
-      { t: "내 할 일이 먼저라 잠깐 시간 날 때 도와준다", type: "C" },
-      { t: "일정 다시 짜서 같이 끝낼 방법부터 찾는다", type: "E" },
-      { t: "분위기 보고 다른 사람도 같이 끼게 유도한다", type: "A" },
-      { t: "퇴근 전까지만 도와주고 시간 되면 칼퇴한다", type: "F" }
-    ]
-  },
-  {
-    q: "팀장님이 갑자기 칭찬을 했다. 당신의 속마음은?",
-    options: [
-      { t: "왜 칭찬했는지부터 빠르게 분석한다", type: "A" },
-      { t: "민망해서 그냥 조용히 웃고 넘긴다", type: "B" },
-      { t: "원래 잘하는 거 알아줘서 다행이라 생각한다", type: "H" },
-      { t: "분위기 좋을 때 같이 한마디 더 던진다", type: "G" }
-    ]
-  },
-  {
-    q: "퇴근 시간 5분 전, 갑자기 급한 요청이 들어왔다. 당신은?",
-    options: [
-      { t: "내일 해도 되는지부터 확인하고 정시 퇴근을 노린다", type: "F" },
-      { t: "일단 자료부터 깔끔하게 정리해두고 처리한다", type: "E" },
-      { t: "큰 동요 없이 늘 있던 일처럼 대응한다", type: "H" },
-      { t: "그냥 묵묵히 처리하고 빨리 끝낸다", type: "C" }
-    ]
-  },
-  {
-    q: "동료들이 사내 소문 얘기를 시작했다. 당신은?",
-    options: [
-      { t: "이미 대충 다 알고 있지만 모르는 척한다", type: "H" },
-      { t: "관심 없어서 슬쩍 자리를 피한다", type: "C" },
-      { t: "조용히 듣기만 하고 의견은 잘 안 낸다", type: "B" },
-      { t: "분위기 띄우려고 재밌는 리액션을 한다", type: "G" }
-    ]
-  },
-  {
-    q: "프로젝트 진행 중 의견 충돌이 생겼다. 당신의 역할은?",
-    options: [
-      { t: "양쪽 분위기 다 살펴보고 중재할 타이밍을 잡는다", type: "A" },
-      { t: "데이터와 일정으로 누가 맞는지 정리해서 보여준다", type: "E" },
-      { t: "분위기 무거워지지 않게 가볍게 환기시킨다", type: "G" },
-      { t: "다수가 원하는 방향으로 자연스럽게 맞춰준다", type: "D" }
-    ]
-  },
-  {
-    q: "한 주를 마무리하며 가장 만족스러운 순간은?",
-    options: [
-      { t: "정시에 깔끔하게 퇴근하는 금요일 6시", type: "F" },
-      { t: "투두리스트를 전부 체크하고 닫은 순간", type: "E" },
-      { t: "팀 분위기를 한층 끌어올렸다고 느낄 때", type: "G" },
-      { t: "아무 잡음 없이 조용히 한 주가 지나갔을 때", type: "C" }
-    ]
-  }
 ];
 
-let current = 0;
-const scores = { A:0, B:0, C:0, D:0, E:0, F:0, G:0, H:0 };
+// ============================================================
+//  THREE.JS INIT
+// ============================================================
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
 
-const screenStart = document.getElementById('screen-start');
-const screenQuiz = document.getElementById('screen-quiz');
-const screenResult = document.getElementById('screen-result');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87CEEB);
+scene.fog = new THREE.FogExp2(0xaaddff, 0.006);
 
-document.getElementById('btn-start').addEventListener('click', startQuiz);
-document.getElementById('btn-retry').addEventListener('click', resetQuiz);
-document.getElementById('btn-share').addEventListener('click', shareResult);
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 600);
+camera.position.set(0, 6, 15);
 
-function startQuiz() {
-  current = 0;
-  for (const k in scores) scores[k] = 0;
-  screenStart.classList.remove('active');
-  screenResult.classList.remove('active');
-  screenQuiz.classList.add('active');
-  renderQuestion();
+// 조명
+scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+const sun = new THREE.DirectionalLight(0xfffbe0, 1.0);
+sun.position.set(30, 60, 30);
+sun.castShadow = true;
+scene.add(sun);
+
+// 배경 오션 플레인
+// 추후 바다 텍스처 교체 가이드:
+// const oceanTex = new THREE.TextureLoader().load('ocean.jpg');
+// oceanMat.map = oceanTex;
+const oceanGeo = new THREE.PlaneGeometry(1000, 1000);
+const oceanMat = new THREE.MeshPhongMaterial({ color: 0x006994, shininess: 60, specular: 0x88ccff });
+const ocean = new THREE.Mesh(oceanGeo, oceanMat);
+ocean.rotation.x = -Math.PI / 2;
+ocean.position.y = -80;
+scene.add(ocean);
+
+// 배경 구름 (랜덤 박스)
+for (let i = 0; i < 12; i++) {
+  const cGeo = new THREE.BoxGeometry(
+    8 + Math.random() * 12, 3 + Math.random() * 4, 6 + Math.random() * 8
+  );
+  const cMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.82 });
+  const cloud = new THREE.Mesh(cGeo, cMat);
+  cloud.position.set(
+    (Math.random() - 0.5) * 300,
+    40 + Math.random() * 40,
+    -50 - Math.random() * 200
+  );
+  scene.add(cloud);
 }
 
-function renderQuestion() {
-  const total = QUESTIONS.length;
-  const item = QUESTIONS[current];
-  document.getElementById('q-number').textContent = `Q${current + 1}`;
-  document.getElementById('q-text').textContent = item.q;
-  document.getElementById('progress-label').textContent = `${current + 1} / ${total}`;
-  document.getElementById('progress-fill').style.width = `${((current) / total) * 100}%`;
+// ============================================================
+//  STRIPE SHADER (블루/화이트 스트라이프)
+// ============================================================
+// 추후 실제 텍스처 교체 방법:
+//   const slideTex = new THREE.TextureLoader().load('slide_stripe.jpg');
+//   slideTex.wrapS = slideTex.wrapT = THREE.RepeatWrapping;
+//   slideTex.repeat.set(8, 1);
+//   stripeMat.uniforms.useTexture.value = 1.0;
+//   stripeMat.uniforms.tDiffuse.value = slideTex;
+const stripeMat = new THREE.ShaderMaterial({
+  uniforms: { stripeCount: { value: 16.0 } },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec2 vUv;
+    uniform float stripeCount;
+    void main() {
+      float s = mod(floor(vUv.x * stripeCount), 2.0);
+      vec3 blue  = vec3(0.08, 0.48, 0.96);
+      vec3 white = vec3(0.88, 0.94, 1.00);
+      vec3 col = mix(white, blue, s);
+      // 가장자리 어둡게 (U자형 느낌)
+      float edge = smoothstep(0.0, 0.15, vUv.y) * (1.0 - smoothstep(0.85, 1.0, vUv.y));
+      col *= (0.7 + 0.3 * edge);
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+  side: THREE.DoubleSide,
+});
 
-  const optWrap = document.getElementById('q-options');
-  optWrap.innerHTML = '';
-  item.options.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.className = 'option-btn';
-    btn.textContent = opt.t;
-    btn.addEventListener('click', () => selectOption(opt.type));
-    optWrap.appendChild(btn);
+// ============================================================
+//  GAME STATE
+// ============================================================
+const GS = {
+  state: 'menu',   // menu | playing | airtime | falling | result
+  round: 0,
+  t: 0,            // 트랙 위 진행도 (0~1)
+  lateral: 0,      // 좌우 위치 (-1 ~ +1, 0 = 중앙)
+  latVel: 0,       // 좌우 속도
+  speed: 0,        // 현재 전진 속도
+  jumpVY: 0,       // 점프 수직 속도
+  jumpY: 0,        // 점프 높이 오프셋
+  jumpReady: false,// 점프 가능 구간 진입 여부
+  jumpDone: false, // 이번 갭에서 점프 완료 여부
+};
+
+// 씬 오브젝트 핸들
+let trackObj = null;
+let playerObj = null;
+let poolObj = null;
+let trackCurve = null;
+let particles = [];
+
+// ============================================================
+//  INPUT
+// ============================================================
+const INPUT = { left: false, right: false, dx: 0 };
+
+// 터치
+let touchX0 = null;
+renderer.domElement.addEventListener('touchstart',  e => { e.preventDefault(); touchX0 = e.touches[0].clientX; }, { passive: false });
+renderer.domElement.addEventListener('touchmove',   e => {
+  e.preventDefault();
+  if (touchX0 != null) { INPUT.dx = (e.touches[0].clientX - touchX0) * 0.018; touchX0 = e.touches[0].clientX; }
+}, { passive: false });
+renderer.domElement.addEventListener('touchend',    e => { e.preventDefault(); touchX0 = null; INPUT.dx = 0; }, { passive: false });
+
+// 마우스 (PC 테스트)
+let mouseDown = false, mouseX0 = 0;
+renderer.domElement.addEventListener('mousedown', e => { mouseDown = true; mouseX0 = e.clientX; });
+renderer.domElement.addEventListener('mousemove', e => { if (mouseDown) { INPUT.dx = (e.clientX - mouseX0) * 0.012; mouseX0 = e.clientX; } });
+renderer.domElement.addEventListener('mouseup',   () => { mouseDown = false; INPUT.dx = 0; });
+
+// 키보드
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft')  INPUT.left  = true;
+  if (e.key === 'ArrowRight') INPUT.right = true;
+  if (e.key === ' ' || e.key === 'ArrowUp') doJump();
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowLeft')  INPUT.left  = false;
+  if (e.key === 'ArrowRight') INPUT.right = false;
+});
+
+// ============================================================
+//  TRACK BUILDER
+// ============================================================
+function buildTrack(ri) {
+  if (trackObj) { scene.remove(trackObj); trackObj.geometry.dispose(); trackObj = null; }
+  if (poolObj)  { scene.remove(poolObj);  poolObj  = null; }
+
+  const rd = ROUNDS[ri];
+  const pts = rd.pts.map(p => new THREE.Vector3(...p));
+  trackCurve = new THREE.CatmullRomCurve3(pts);
+
+  // TubeGeometry로 슬라이드 터널 생성
+  const tubeGeo = new THREE.TubeGeometry(trackCurve, 220, CFG.TRACK_R, 14, false);
+  const mat = stripeMat.clone();
+  trackObj = new THREE.Mesh(tubeGeo, mat);
+  trackObj.receiveShadow = true;
+  scene.add(trackObj);
+
+  buildPool(ri);
+}
+
+// ============================================================
+//  POOL BUILDER (과녁 수영장)
+// ============================================================
+function buildPool(ri) {
+  const pp = ROUNDS[ri].poolAt;
+  poolObj = new THREE.Group();
+
+  // 모래/지면 받침
+  const baseGeo = new THREE.CylinderGeometry(9, 9, 0.8, 32);
+  const baseMat = new THREE.MeshPhongMaterial({ color: 0xf4d58d });
+  poolObj.add(new THREE.Mesh(baseGeo, baseMat));
+
+  // 과녁 3단: Safe / Great / Perfect
+  const rings = [
+    { r: 7.5, col: 0x2288cc, label: 'safe' },
+    { r: 4.5, col: 0x1155ee, label: 'great' },
+    { r: 2.0, col: 0xffd700, label: 'perfect' },
+  ];
+  rings.forEach((rn, i) => {
+    const geo = new THREE.CylinderGeometry(rn.r, rn.r, 0.35 + i * 0.18, 32);
+    const mat = new THREE.MeshPhongMaterial({ color: rn.col, shininess: 120, specular: 0x88ddff });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.y = 0.4 + i * 0.18;
+    poolObj.add(mesh);
   });
+
+  // 물 반짝임 레이어
+  const waterGeo = new THREE.CylinderGeometry(7.5, 7.5, 0.15, 32);
+  const waterMat = new THREE.MeshPhongMaterial({
+    color: 0x00cfff, transparent: true, opacity: 0.72, shininess: 200, specular: 0xffffff,
+  });
+  const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+  waterMesh.position.y = 1.1;
+  poolObj.add(waterMesh);
+
+  poolObj.position.set(...pp);
+  scene.add(poolObj);
 }
 
-function selectOption(type) {
-  scores[type] += 1;
-  current += 1;
-  if (current >= QUESTIONS.length) {
-    document.getElementById('progress-fill').style.width = '100%';
-    setTimeout(showResult, 200);
-  } else {
-    renderQuestion();
+// ============================================================
+//  PLAYER BUILDER
+// ============================================================
+function buildPlayer() {
+  if (playerObj) scene.remove(playerObj);
+
+  // 추후 캐릭터 모델 교체 가이드:
+  // import { GLTFLoader } from '...'; loader.load('character.glb', gltf => { playerObj = gltf.scene; ... });
+  const grp = new THREE.Group();
+
+  // 몸통 (핑크 구체)
+  const bodyGeo = new THREE.SphereGeometry(CFG.PLAYER_R, 16, 12);
+  const bodyMat = new THREE.MeshPhongMaterial({ color: 0xff69b4, shininess: 100, specular: 0xffaacc });
+  grp.add(new THREE.Mesh(bodyGeo, bodyMat));
+
+  // 수영 튜브 (토러스)
+  const tubeGeo = new THREE.TorusGeometry(CFG.PLAYER_R * 1.3, CFG.PLAYER_R * 0.28, 8, 20);
+  const tubeMat = new THREE.MeshPhongMaterial({ color: 0xff4500, shininess: 80 });
+  const tube = new THREE.Mesh(tubeGeo, tubeMat);
+  tube.rotation.x = Math.PI / 2;
+  grp.add(tube);
+
+  playerObj = grp;
+  scene.add(playerObj);
+}
+
+// ============================================================
+//  PARTICLES (물보라)
+// ============================================================
+function splash(pos, grade) {
+  const palettes = { perfect: [0xffd700, 0xffa500], great: [0x00bfff, 0x0080ff], safe: [0xffffff, 0xaaeeff] };
+  const count    = { perfect: 90, great: 50, safe: 25 };
+  const cols = palettes[grade] || palettes.safe;
+  const n = count[grade] || 25;
+
+  for (let i = 0; i < n; i++) {
+    const geo = new THREE.SphereGeometry(0.14 + Math.random() * 0.12, 5, 5);
+    const mat = new THREE.MeshBasicMaterial({ color: cols[i % cols.length] });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.copy(pos);
+    const ang = Math.random() * Math.PI * 2;
+    const spd = 0.08 + Math.random() * 0.32;
+    particles.push({ m, vx: Math.cos(ang) * spd, vy: 0.12 + Math.random() * 0.28, vz: Math.sin(ang) * spd, life: 1 });
+    scene.add(m);
   }
 }
 
-function showResult() {
-  let bestType = 'A';
-  let bestScore = -1;
-  for (const k in scores) {
-    if (scores[k] > bestScore) {
-      bestScore = scores[k];
-      bestType = k;
+function tickParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.m.position.x += p.vx;
+    p.m.position.y += p.vy;
+    p.m.position.z += p.vz;
+    p.vy -= 0.009;
+    p.life -= 0.018;
+    p.m.material.opacity = p.life;
+    p.m.material.transparent = true;
+    if (p.life <= 0) { scene.remove(p.m); p.m.geometry.dispose(); particles.splice(i, 1); }
+  }
+}
+
+// ============================================================
+//  ROUND START / RESET
+// ============================================================
+function startRound(ri) {
+  GS.state = 'playing';
+  GS.round = ri;
+  GS.t = 0.001;
+  GS.lateral = 0;
+  GS.latVel = 0;
+  GS.speed = ROUNDS[ri].speed;
+  GS.jumpVY = 0;
+  GS.jumpY = 0;
+  GS.jumpReady = false;
+  GS.jumpDone = false;
+
+  particles.forEach(p => { scene.remove(p.m); }); particles = [];
+  document.getElementById('result-panel').style.display = 'none';
+  document.getElementById('jump-btn').classList.remove('visible');
+  document.getElementById('round-display').textContent = ROUNDS[ri].label;
+
+  buildTrack(ri);
+  buildPlayer();
+}
+
+// ============================================================
+//  JUMP
+// ============================================================
+function doJump() {
+  if (GS.state !== 'playing') return;
+  if (!GS.jumpReady || GS.jumpDone) return;
+  GS.state = 'airtime';
+  GS.jumpVY = 0.28;
+  GS.jumpY = 0;
+  GS.jumpDone = true;
+  document.getElementById('jump-btn').classList.remove('visible');
+}
+
+// ============================================================
+//  MAIN PHYSICS UPDATE
+// ============================================================
+const _right = new THREE.Vector3();
+const _up    = new THREE.Vector3(0, 1, 0);
+const _tan   = new THREE.Vector3();
+const _camTarget = new THREE.Vector3();
+
+function physicsUpdate() {
+  if (GS.state !== 'playing' && GS.state !== 'airtime') return;
+
+  const rd = ROUNDS[GS.round];
+
+  // ── 전진 ──
+  GS.t += GS.speed;
+  GS.speed = Math.min(GS.speed + 0.000004, rd.speed * CFG.MAX_SPEED_MULT);
+
+  // ── 입력 처리 ──
+  let latIn = INPUT.dx * CFG.LATERAL_ACCEL * 2.2;
+  if (INPUT.left)  latIn -= CFG.LATERAL_ACCEL;
+  if (INPUT.right) latIn += CFG.LATERAL_ACCEL;
+  INPUT.dx *= 0.65; // 드래그 감쇠
+
+  // ── 원심력 (커브 방향 감지) ──
+  if (GS.t > 0.01 && GS.t < 0.98) {
+    const t0 = Math.max(0.001, GS.t - 0.018);
+    const t1 = Math.min(0.999, GS.t + 0.018);
+    const p0 = trackCurve.getPointAt(t0);
+    const p1 = trackCurve.getPointAt(t1);
+    const dx = (p1.x - p0.x); // x방향 커브량
+    const cent = dx * rd.centrifugal * GS.speed * 400;
+    GS.latVel += cent;
+  }
+
+  GS.latVel += latIn;
+  GS.latVel *= CFG.FRICTION;
+  GS.lateral += GS.latVel * 0.07;
+  GS.lateral = Math.max(-1.5, Math.min(1.5, GS.lateral)); // 범위 클램프
+
+  // ── 점프 갭 처리 ──
+  if (rd.hasJump) {
+    const [gs, ge] = rd.jumpGapT;
+
+    // 점프 준비 구간 진입
+    if (GS.t >= gs - 0.08 && GS.t < gs) {
+      if (!GS.jumpReady) {
+        GS.jumpReady = true;
+        document.getElementById('jump-btn').classList.add('visible');
+      }
+    }
+
+    // 갭 구간 처리
+    if (GS.t >= gs && GS.t < ge) {
+      if (GS.state === 'airtime') {
+        // 점프 중: 포물선 물리
+        GS.jumpVY -= 0.01;
+        GS.jumpY  += GS.jumpVY;
+        if (GS.jumpY < 0 && GS.t >= ge - 0.03) {
+          GS.jumpY = 0; GS.state = 'playing';
+        }
+      } else {
+        // 점프 안 함 → 추락
+        triggerFall();
+        return;
+      }
     }
   }
-  const data = TYPES[bestType];
 
-  document.getElementById('r-emoji').textContent = data.emoji;
-  document.getElementById('r-title').textContent = data.title;
-  document.getElementById('r-desc').textContent = data.desc;
-
-  const tagWrap = document.getElementById('r-tags');
-  tagWrap.innerHTML = '';
-  data.tags.forEach(tag => {
-    const span = document.createElement('span');
-    span.className = 'tag';
-    span.textContent = tag;
-    tagWrap.appendChild(span);
-  });
-
-  document.getElementById('r-good').textContent = data.good;
-  document.getElementById('r-bad').textContent = data.bad;
-
-  screenQuiz.classList.remove('active');
-  screenResult.classList.add('active');
-}
-
-function resetQuiz() {
-  screenResult.classList.remove('active');
-  screenStart.classList.add('active');
-}
-
-function shareResult() {
-  const title = document.getElementById('r-title').textContent;
-  const text = `나의 직장인 사회생활 유형은 "${title}"! 너도 테스트 해봐.`;
-  if (navigator.share) {
-    navigator.share({ title: '직장인 사회생활 능력 테스트', text }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(text).then(() => {
-      alert('결과가 복사되었어요. 친구에게 공유해보세요!');
-    }).catch(() => {
-      alert(text);
-    });
+  // ── 이탈 판정 ──
+  if (Math.abs(GS.lateral) > CFG.FALL_LIMIT) {
+    triggerFall();
+    return;
   }
+
+  // ── 트랙 완주 판정 ──
+  if (GS.t >= 0.975) {
+    triggerClear();
+    return;
+  }
+
+  updatePlayerMesh();
 }
+
+// ============================================================
+//  PLAYER MESH 위치 갱신 + 카메라 추적
+// ============================================================
+function updatePlayerMesh() {
+  if (!playerObj || !trackCurve) return;
+  const t = Math.min(Math.max(GS.t, 0.001), 0.999);
+
+  const pos = trackCurve.getPointAt(t);
+  trackCurve.getTangentAt(t, _tan);
+
+  // 슬라이드 내 좌우 오프셋 (원의 호를 따라)
+  _right.crossVectors(_tan, _up).normalize();
+  const latAngle = GS.lateral * 0.75; // -0.75 ~ +0.75 rad
+  const rOff = Math.sin(latAngle) * CFG.TRACK_R * 0.68;
+  const yOff = (1.0 - Math.cos(latAngle)) * CFG.TRACK_R * 0.35;
+
+  pos.addScaledVector(_right, rOff);
+  pos.y += yOff + CFG.PLAYER_R + GS.jumpY * 3.5;
+
+  playerObj.position.copy(pos);
+  playerObj.rotation.y = Math.atan2(_tan.x, _tan.z);
+
+  // 카메라 추적
+  _camTarget.copy(pos)
+    .addScaledVector(_tan, -CFG.CAM_DIST)
+    .add(new THREE.Vector3(0, CFG.CAM_H, 0));
+  camera.position.lerp(_camTarget, CFG.CAM_LERP);
+  camera.lookAt(pos);
+
+  // 속도 HUD
+  const pct = Math.min(100, ((GS.speed - ROUNDS[GS.round].speed) /
+    (ROUNDS[GS.round].speed * (CFG.MAX_SPEED_MULT - 1))) * 100);
+  document.getElementById('speed-bar').style.width = pct + '%';
+}
+
+// ============================================================
+//  FALL / CLEAR
+// ============================================================
+function triggerFall() {
+  GS.state = 'falling';
+  document.getElementById('jump-btn').classList.remove('visible');
+
+  // 이탈 이모지 애니메이션
+  const fw = document.getElementById('fall-warning');
+  fw.style.display = 'block';
+  fw.style.animation = 'none';
+  void fw.offsetWidth; // reflow
+  fw.style.animation = 'fadeOut 1.2s forwards';
+  setTimeout(() => { fw.style.display = 'none'; }, 1200);
+
+  setTimeout(() => {
+    GS.state = 'result';
+    const rp = document.getElementById('result-panel');
+    document.getElementById('result-title').textContent = '💦 이탈!';
+    document.getElementById('result-msg').textContent = '슬라이드에서 떨어졌어요!';
+    document.getElementById('next-btn').style.display = 'none';
+    rp.style.display = 'block';
+  }, 800);
+}
+
+function triggerClear() {
+  GS.state = 'result';
+  document.getElementById('jump-btn').classList.remove('visible');
+
+  const abs = Math.abs(GS.lateral);
+  let grade, emoji, msg;
+  if      (abs < 0.18) { grade = 'perfect'; emoji = '🏆 PERFECT!'; msg = '완벽한 착지! 만점!'; }
+  else if (abs < 0.50) { grade = 'great';   emoji = '⭐ GREAT!';   msg = '훌륭한 착지!'; }
+  else                 { grade = 'safe';     emoji = '👍 SAFE';     msg = '안전 착지!'; }
+
+  const poolPos = new THREE.Vector3(...ROUNDS[GS.round].poolAt);
+  splash(poolPos, grade);
+
+  document.getElementById('result-title').textContent = emoji;
+  document.getElementById('result-msg').textContent   = msg;
+  document.getElementById('next-btn').style.display = GS.round < 2 ? 'inline-block' : 'none';
+  if (GS.round < 2) {
+    document.getElementById('next-btn').textContent = `라운드 ${GS.round + 2} →`;
+  }
+  document.getElementById('retry-btn').style.display = 'inline-block';
+  document.getElementById('result-panel').style.display = 'block';
+}
+
+// ============================================================
+//  UI WIRING
+// ============================================================
+document.getElementById('start-btn').addEventListener('click', () => {
+  document.getElementById('overlay').classList.add('hidden');
+  startRound(0);
+});
+document.getElementById('jump-btn').addEventListener('click', doJump);
+document.getElementById('jump-btn').addEventListener('touchstart', e => { e.preventDefault(); doJump(); }, { passive: false });
+document.getElementById('retry-btn').addEventListener('click', () => startRound(GS.round));
+document.getElementById('next-btn').addEventListener('click', () => {
+  if (GS.round < 2) startRound(GS.round + 1);
+  else {
+    document.getElementById('result-panel').style.display = 'none';
+    document.getElementById('overlay').classList.remove('hidden');
+    document.getElementById('overlay').innerHTML = `
+      <h1>🎉 ALL CLEAR!</h1>
+      <p>3라운드 모두 클리어! 대단해요!</p>
+      <button class="btn-primary" onclick="location.reload()">처음부터</button>
+    `;
+  }
+});
+
+// ============================================================
+//  RESIZE
+// ============================================================
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ============================================================
+//  RENDER LOOP
+// ============================================================
+function loop() {
+  requestAnimationFrame(loop);
+  physicsUpdate();
+  tickParticles();
+  if (poolObj) poolObj.rotation.y += 0.004; // 물 반짝임 회전
+  renderer.render(scene, camera);
+}
+
+loop();
 </script>
 </body>
 </html>
