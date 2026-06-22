@@ -248,7 +248,7 @@
         <button class="btn" id="shareBtn">공유하기</button>
         <button class="btn gold" id="rankRestartBtn">다시 도전</button>
         <button class="btn" id="rankResumeBtn">이어하기</button>
-        <button class="btn gold" id="rankRetryBtn">다시하기</button>
+        <button class="btn gold" id="rankRetryBtn">처음으로</button>
       </div>
     </div>
   </div>
@@ -679,7 +679,7 @@ overlayBtnEl.addEventListener('click', ()=>{
   }
 });
 
-// 종료하기 -> 순위 화면(이어하기 / 다시하기)
+// 종료하기 -> 순위 화면(이어하기 / 처음으로)
 function onQuit(){
   // 이어하기 시 돌아갈 라운드 기억: 클리어면 다음 라운드, 그 외엔 현재 라운드
   if(GAME.state===STATE.CLEARED){
@@ -700,9 +700,26 @@ function onQuit(){
 }
 const overlayHomeBtn = document.getElementById('overlayHomeBtn');
 if(overlayHomeBtn) overlayHomeBtn.addEventListener('click', onQuit);
-// 순위 화면: 이어하기 / 다시하기
+// 처음으로: 시작 화면으로 이동 + 스코어 리셋
+function goToStartScreen(){
+  hideRanking();
+  hideOverlay();
+  GAME.state = STATE.READY;
+  GAME.score = 0;          // 스코어 리셋
+  GAME.roundScore = 0;
+  GAME.round = 1;
+  GAME.roll = 0;
+  jumpBtnEl.classList.remove('show','armed');
+  jumpNoticeEl.classList.remove('show');
+  jumpCounterEl.classList.remove('show');
+  renderStartRanking();    // 시작화면 순위 갱신
+  startScreenEl.classList.remove('fade-hide');
+  startScreenEl.style.display = 'block';
+  startScreenEl.scrollTop = 0;   // 표지부터 보이게
+}
+// 순위 화면: 이어하기 / 처음으로
 if(rankResumeBtn) rankResumeBtn.addEventListener('click', ()=>{ hideRanking(); startRound(GAME.resumeRound || GAME.round || 1); });
-if(rankRetryBtn)  rankRetryBtn.addEventListener('click', ()=>{ hideRanking(); startRound(1); });
+if(rankRetryBtn)  rankRetryBtn.addEventListener('click', goToStartScreen);
 startBtnEl.addEventListener('click', ()=>{
   const name = (nameInputEl.value || '').trim().slice(0, 12);
   if(!name){
