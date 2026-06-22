@@ -761,6 +761,31 @@ function spawnBananaPop(){
   }
 }
 
+// ---------- 슬라이드 미끄러질 때 물 튀김(양옆 물보라) ----------
+function spawnSlideSpray(dt){
+  GAME._sprayT = (GAME._sprayT || 0) + dt;
+  const interval = 0.03;                                   // 초당 약 33회
+  const intensity = Math.max(0.25, Math.min(1, GAME.speed / TRACK.speedMax));
+  const px = W/2 + GAME.lateral * W*0.02;
+  const py = H*0.80;   // 튜브가 물에 닿는 높이쯤
+  while(GAME._sprayT >= interval){
+    GAME._sprayT -= interval;
+    const cnt = 2 + Math.floor(intensity*3);
+    for(let i=0;i<cnt;i++){
+      const side = (Math.random()<0.5 ? -1 : 1);
+      splash.push({
+        x: px + side*(30 + Math.random()*38),
+        y: py + Math.random()*20,
+        vx: side*(2.5 + Math.random()*4.5),               // 바깥으로 튀어나감
+        vy: -(3 + Math.random()*5.5)*intensity - 1.5,     // 위로 튀어오름
+        life: 0.5 + Math.random()*0.4,
+        col: (Math.random()<0.5 ? '#ffffff' : '#bfe9ff'),
+        r: 2 + Math.random()*3.5
+      });
+    }
+  }
+}
+
 // ---------- 다이빙 입수 물 튀김 ----------
 let waterRings = [];
 function spawnDiveWater(cx, cy){
@@ -973,6 +998,7 @@ function updatePhysics(dt){
 // ---------- 메인 업데이트 ----------
 function updatePlaying(dt){
   updatePhysics(dt);
+  spawnSlideSpray(dt);   // 미끄러지는 동안 물보라
 
   // 정중앙 보너스: 슬라이드 한가운데를 유지하면 보너스 점수가 쌓이고 숫자로 표시된다
   if(Math.abs(GAME.lateral) < 0.12){
