@@ -363,10 +363,13 @@ const GAME = {
   score: 0,           // 누적 점수(완료한 라운드들의 합, 라운드당 최대 100)
   roundScore: 0,      // 현재 라운드에서 모은 점수(최대 100)
   _centerT: 0,        // 정중앙 유지 시간(보너스 누적용)
+  attempt: 1,         // 현재 라운드 시도 횟수 (1=첫 시도)
   playerName: ''      // 시작 화면에서 입력받은 이름
 };
 
 const ROUND_MAX_SCORE = 100;   // 라운드당 최대 점수
+// 시도 횟수별 점수 배수: 1번째 100% · 2번째 70% · 3번째 40% · 4번째+ 30%
+function attemptMultiplier(a){ return ({1:1.0, 2:0.7, 3:0.4})[a] || 0.3; }
 // 현재 라운드 점수에 가산(최대 100으로 제한). 실제로 더해진 양을 반환.
 function addRoundScore(pts){
   const before = GAME.roundScore;
@@ -533,6 +536,9 @@ function updateJumpCounter(){
   jumpCounterEl.classList.add('show');
 }
 function startRound(n){
+  // 같은 라운드를 실패 후 다시 시작하면 시도 횟수 증가(점수 차등용), 그 외엔 1로 초기화
+  const isRetry = (GAME.state === STATE.FAILED && n === GAME.round);
+  GAME.attempt = isRetry ? (GAME.attempt || 1) + 1 : 1;
   GAME.round = n;
   TRACK = buildRound(n);
   precomputeOffsets();
@@ -647,8 +653,13 @@ function finalizeDive(){
     return;
   }
   GAME.state = STATE.CLEARED;
-  const earned = Math.round(GAME.roundScore);     // 이번 라운드 점수(최대 100)
+  // 시도 횟수에 따른 점수 차등 (한 번에 성공 못하면 차감)
+  const mult = attemptMultiplier(GAME.attempt || 1);
+  const earned = Math.round(GAME.roundScore * mult);
   GAME.score += earned;
+  const attemptNote = (GAME.attempt > 1)
+    ? '  (' + GAME.attempt + '번째 도전 · ' + Math.round(mult*100) + '% 반영, +' + earned + '점)'
+    : '  (이번 라운드 +' + earned + '점)';
   const isLast = GAME.round >= GAME.maxRound;
   const descMap = {
     perfect:'완벽한 골드존 다이빙! 최고의 손맛입니다.',
@@ -658,7 +669,7 @@ function finalizeDive(){
   if(isLast){
     finishGame(tier);   // 전체 클리어 -> 랭킹 화면
   } else {
-    showOverlay('ROUND CLEAR!', tier, descMap[tier] + '  (이번 라운드 +' + earned + '점)', '다음 라운드', true, true);
+    showOverlay('ROUND CLEAR!', tier, descMap[tier] + attemptNote, '다음 라운드', true, true);
   }
 }
 
